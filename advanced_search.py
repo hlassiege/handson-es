@@ -2,27 +2,17 @@ import requests, json
 
 BASE_PATH = "http://localhost:9200/library/movie"
 
-print "\n\n\tSearch Manhattan in every field of the document"
-
-r = requests.get(BASE_PATH+"/_search?q=Manhattan")
-print r.text
-
-
-print "\n\n\tSearch Manhattan in title field of the document"
-
-r = requests.get(BASE_PATH+"/_search?q=title:Manhattan")
-print r.text
-
 print "\n\n\tSearch English with a boost on plot_simple field of the document"
 
 
-data = {"query":{
+data = {"from" : 0, "size" : 1,
+		"query":{
 		"bool" : {
 		"should" : [ {
 		  "match" : {
 			"plot_simple" : {
 			  "query" : "English",
-			  "boost" : 1.0
+			  "boost" : -1.5
 			}
 		  }
 		}, {
@@ -41,7 +31,7 @@ print r.text
 
 
 print "\n\n\tSearch English with a custom score computed on rating"
-data = {
+data = {"from" : 0, "size" : 1,
 	"query" : {
       "custom_score" : {
         "query" : {
@@ -49,7 +39,7 @@ data = {
                 "language" : "English"
                 }
               },
-			  "script" : "_score + ( doc['rating_count'].value > 36000 ? doc['rating'].value / 10 : 0 )"
+			  "script" : "_score + ( doc['rating_count'].value > 36000 ? doc['rating'].value : 0 )"
         }
       }
     }
@@ -57,8 +47,8 @@ data = {
 r = requests.post(BASE_PATH+"/_search", data=json.dumps(data))
 print r.text
 
-print "\n\n\Match all sorted by rating"
-data = {
+print "\n\n\tMatch all sorted by rating"
+data = { "from" : 0, "size" : 1,
 	     "sort" : [ { "rating" : {"order" : "desc"} } ],
 		 "query" :{ "match_all" : { }}
 	   }
@@ -68,8 +58,8 @@ print r.text
 
 
 
-print "\n\n\Match all in range of rating 0-7"
-data =  {
+print "\n\n\tMatch all in range of rating 0-7"
+data =  {"from" : 0, "size" : 1,
     "filter" : {
             "range" : {
                 "rating" : { 
